@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { authApi } from '../services/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,31 +9,14 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Usuario quemado para desarrollo sin backend
-  const mockLogin = async (email, password) => {
-    // Credenciales de prueba
-    if (email === 'admin@tickets.com' && password === '123456') {
-      return {
-        token: 'mock-token-123',
-        user: {
-          id: 1,
-          email: 'admin@tickets.com',
-          nombre: 'Administrador',
-          role: 'admin'
-        }
-      };
-    }
-    throw new Error('Credenciales incorrectas');
-  };
-
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Usar mockLogin en lugar de authApi.login
-      await login(email, password, mockLogin);
+      await login(email, password);
       navigate('/tecnicos');
     } catch (err) {
+      console.error('Login error:', err);
       alert('Usuario o contraseña incorrectos. Usa: admin@tickets.com / 123456');
     } finally {
       setLoading(false);
