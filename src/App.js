@@ -1,25 +1,63 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import Login from './pages/Login';
+import Tecnicos from './pages/Tecnicos';
+import Clientes from './pages/Clientes';
+import Tickets from './pages/Tickets';
+import Navbar from './components/Navbar';
 
-function App() {
+function PrivateRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+function AppRoutes() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
+      <Route
+        path="/tecnicos"
+        element={
+          <PrivateRoute>
+            <Navbar />
+            <Tecnicos />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/clientes"
+        element={
+          <PrivateRoute>
+            <Navbar />
+            <Clientes />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/tickets"
+        element={
+          <PrivateRoute>
+            <Navbar />
+            <Tickets />
+          </PrivateRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  );
+}
