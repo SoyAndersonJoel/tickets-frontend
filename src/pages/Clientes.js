@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { clientesApi } from '../services/api';
 
 const empty = {
-  id: '', cedula: '', nombre: '', apellido: '', ciudad: '', email: '', direccion: '', telefono: '', fecha_nacimiento: '', dependencia: ''
+  cedula: '', nombre: '', apellido: '', ciudad: '', email: '', direccion: '', telefono: '', fecha_nacimiento: '', dependencia: ''
 };
 
 export default function Clientes() {
@@ -23,17 +23,38 @@ export default function Clientes() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      await clientesApi.update(editingId, form);
-    } else {
-      await clientesApi.create(form);
+    setLoading(true);
+    try {
+      if (editingId) {
+        await clientesApi.update(editingId, form);
+      } else {
+        await clientesApi.create(form);
+      }
+      setForm(empty);
+      setEditingId(null);
+      await load();
+    } catch (error) {
+      console.error('Error al guardar cliente:', error);
+      alert('Error al guardar el cliente: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setForm(empty);
-    setEditingId(null);
-    await load();
   };
 
-  const onEdit = (it) => { setEditingId(it.id); setForm({ ...it }); };
+  const onEdit = (it) => { 
+    setEditingId(it.id); 
+    setForm({
+      cedula: it.cedula || '',
+      nombre: it.nombre || '',
+      apellido: it.apellido || '',
+      ciudad: it.ciudad || '',
+      email: it.email || '',
+      direccion: it.direccion || '',
+      telefono: it.telefono || '',
+      fecha_nacimiento: it.fecha_nacimiento || '',
+      dependencia: it.dependencia || ''
+    }); 
+  };
   const onDelete = async (id) => { if (!window.confirm('¿Eliminar cliente?')) return; await clientesApi.remove(id); await load(); };
 
   return (
@@ -53,10 +74,6 @@ export default function Clientes() {
           </h4>
           <form onSubmit={onSubmit}>
             <div className="grid grid-2">
-              <div className="form-group">
-                <label>ID</label>
-                <input name="id" value={form.id} onChange={onChange} required />
-              </div>
               <div className="form-group">
                 <label>Cédula</label>
                 <input name="cedula" value={form.cedula} onChange={onChange} required />
@@ -96,14 +113,22 @@ export default function Clientes() {
             </div>
             
             <div className="flex flex-row">
-              <button type="submit" className="btn btn-success">
-                {editingId ? 'Actualizar' : 'Crear'}
+              <button type="submit" className="btn btn-success" disabled={loading}>
+                {loading ? (
+                  <div className="login-spinner">
+                    <div className="login-spinner-icon"></div>
+                    {editingId ? 'Actualizando...' : 'Creando...'}
+                  </div>
+                ) : (
+                  editingId ? 'Actualizar' : 'Crear'
+                )}
               </button>
               {editingId && (
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setForm(empty); }}
                   className="btn btn-secondary"
+                  disabled={loading}
                 >
                   Cancelar
                 </button>

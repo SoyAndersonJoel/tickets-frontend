@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { tecnicosApi } from '../services/api';
 
 const empty = {
-  id: '', nombre: '', apellido: '', cedula: '', fecha_nacimiento: '', genero: '', ciudad: '', direccion: '', telefono: '', email: ''
+  nombre: '', apellido: '', cedula: '', fecha_nacimiento: '', genero: '', ciudad: '', direccion: '', telefono: '', email: ''
 };
 
 export default function Tecnicos() {
@@ -15,7 +15,11 @@ export default function Tecnicos() {
 
   const load = async () => {
     setLoading(true);
-    try { setItems(await tecnicosApi.list()); } finally { setLoading(false); }
+    try { 
+      const data = await tecnicosApi.list();
+      console.log('Técnicos cargados:', data);
+      setItems(data);
+    } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -23,19 +27,39 @@ export default function Tecnicos() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      await tecnicosApi.update(editingId, form);
-    } else {
-      await tecnicosApi.create(form);
+    setLoading(true);
+    try {
+      if (editingId) {
+        await tecnicosApi.update(editingId, form);
+      } else {
+        await tecnicosApi.create(form);
+      }
+      setForm(empty);
+      setEditingId(null);
+      await load();
+    } catch (error) {
+      console.error('Error al guardar técnico:', error);
+      alert('Error al guardar el técnico: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setForm(empty);
-    setEditingId(null);
-    await load();
   };
 
   const onEdit = (it) => {
+    console.log('Editando técnico con ID:', it.id);
+    console.log('Datos del técnico:', it);
     setEditingId(it.id);
-    setForm({ ...it });
+    setForm({
+      nombre: it.nombre || '',
+      apellido: it.apellido || '',
+      cedula: it.cedula || '',
+      fecha_nacimiento: it.fecha_nacimiento || '',
+      genero: it.genero || '',
+      ciudad: it.ciudad || '',
+      direccion: it.direccion || '',
+      telefono: it.telefono || '',
+      email: it.email || ''
+    });
   };
 
   const onDelete = async (id) => {
@@ -61,10 +85,6 @@ export default function Tecnicos() {
           </h4>
           <form onSubmit={onSubmit}>
             <div className="grid grid-2">
-              <div className="form-group">
-                <label>ID</label>
-                <input name="id" value={form.id} onChange={onChange} required />
-              </div>
               <div className="form-group">
                 <label>Nombre</label>
                 <input name="nombre" value={form.nombre} onChange={onChange} required />
@@ -109,14 +129,22 @@ export default function Tecnicos() {
             </div>
             
             <div className="flex flex-row">
-              <button type="submit" className="btn btn-primary">
-                {editingId ? 'Actualizar' : 'Crear'}
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? (
+                  <div className="login-spinner">
+                    <div className="login-spinner-icon"></div>
+                    {editingId ? 'Actualizando...' : 'Creando...'}
+                  </div>
+                ) : (
+                  editingId ? 'Actualizar' : 'Crear'
+                )}
               </button>
               {editingId && (
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setForm(empty); }}
                   className="btn btn-secondary"
+                  disabled={loading}
                 >
                   Cancelar
                 </button>

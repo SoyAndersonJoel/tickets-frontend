@@ -29,18 +29,6 @@ export default function Login() {
         <div className="login-header">
           <h1 className="login-title">Sistema de Gestión</h1>
           <p className="login-subtitle">Tickets de Asistencia Técnica</p>
-          <div style={{
-            backgroundColor: '#e3f2fd', 
-            padding: '10px', 
-            borderRadius: '5px', 
-            margin: '10px 0',
-            fontSize: '14px',
-            color: '#1976d2'
-          }}>
-            <strong>🔑 Credenciales de prueba:</strong><br/>
-            Email: admin@tickets.com<br/>
-            Contraseña: 123456
-          </div>
         </div>
         
         <form onSubmit={onSubmit}>

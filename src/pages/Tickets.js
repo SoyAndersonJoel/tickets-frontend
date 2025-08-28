@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { ticketsApi, clientesApi, tecnicosApi } from '../services/api';
 
-const empty = { id: '', codigo: '', descripcion: '', id_tecnico: '', id_cliente: '' };
+const empty = { codigo: '', descripcion: '', id_tecnico: '', id_cliente: '' };
 
 export default function Tickets() {
   const { user } = useAuth();
@@ -31,10 +31,40 @@ export default function Tickets() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) await ticketsApi.update(editingId, form); else await ticketsApi.create(form);
-    setForm(empty); setEditingId(null); await load();
+    setLoading(true);
+    try {
+      console.log('Form data:', form);
+      console.log('Editing ID:', editingId);
+      
+      if (editingId) {
+        console.log('Updating ticket with ID:', editingId);
+        const result = await ticketsApi.update(editingId, form);
+        console.log('Update result:', result);
+      } else {
+        console.log('Creating new ticket');
+        const result = await ticketsApi.create(form);
+        console.log('Create result:', result);
+      }
+      
+      setForm(empty); 
+      setEditingId(null); 
+      await load();
+    } catch (error) {
+      console.error('Error al guardar ticket:', error);
+      alert('Error al guardar el ticket: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
-  const onEdit = (it) => { setEditingId(it.id); setForm({ ...it }); };
+  const onEdit = (it) => { 
+    setEditingId(it.id); 
+    setForm({ 
+      codigo: it.codigo || '', 
+      descripcion: it.descripcion || '', 
+      id_tecnico: it.id_tecnico || '', 
+      id_cliente: it.id_cliente || '' 
+    }); 
+  };
   const onDelete = async (id) => { if (!window.confirm('¿Eliminar ticket?')) return; await ticketsApi.remove(id); await load(); };
 
   return (
@@ -55,12 +85,11 @@ export default function Tickets() {
           <form onSubmit={onSubmit}>
             <div className="grid grid-2">
               <div className="form-group">
-                <label>ID</label>
-                <input name="id" value={form.id} onChange={onChange} required />
-              </div>
-              <div className="form-group">
                 <label>Código</label>
                 <input name="codigo" value={form.codigo} onChange={onChange} required />
+              </div>
+              <div className="form-group">
+                {/* Campo vacío para mantener grid */}
               </div>
               <div className="form-group" style={{gridColumn: 'span 2'}}>
                 <label>Descripción</label>
@@ -91,14 +120,22 @@ export default function Tickets() {
             </div>
             
             <div className="flex flex-row">
-              <button type="submit" className="btn btn-purple">
-                {editingId ? 'Actualizar' : 'Crear'}
+              <button type="submit" className="btn btn-purple" disabled={loading}>
+                {loading ? (
+                  <div className="login-spinner">
+                    <div className="login-spinner-icon"></div>
+                    {editingId ? 'Actualizando...' : 'Creando...'}
+                  </div>
+                ) : (
+                  editingId ? 'Actualizar' : 'Crear'
+                )}
               </button>
               {editingId && (
                 <button 
                   type="button" 
                   onClick={() => { setEditingId(null); setForm(empty); }}
                   className="btn btn-secondary"
+                  disabled={loading}
                 >
                   Cancelar
                 </button>
