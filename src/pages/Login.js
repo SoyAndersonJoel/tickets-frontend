@@ -17,7 +17,7 @@ export default function Login() {
       navigate('/tecnicos');
     } catch (err) {
       console.error('Login error:', err);
-      alert('Usuario o contraseña incorrectos. Usa: admin@tickets.com / 123456');
+      alert('Usuario o contraseña incorrectos. Por favor, verifica tus datos e inténtalo nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -70,6 +70,9 @@ export default function Login() {
             )}
           </button>
         </form>
+        <div style={{marginTop: '1rem', textAlign: 'center'}}>
+          <small>¿No tienes cuenta? <a href="/register">Regístrate</a></small>
+        </div>
       </div>
     </div>
   );

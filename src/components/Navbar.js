@@ -15,13 +15,13 @@ export default function Navbar() {
       <div className="navbar-content">
         <div className="navbar-left">
           <Link to="/tecnicos" className="nav-link">
-            👨‍🔧 Técnicos
+            Técnicos
           </Link>
           <Link to="/clientes" className="nav-link">
-            👥 Clientes
+            Clientes
           </Link>
           <Link to="/tickets" className="nav-link">
-            🎫 Tickets
+            Tickets
           </Link>
         </div>
         <div className="navbar-right">
@@ -29,7 +29,7 @@ export default function Navbar() {
             Bienvenido - <span className="welcome-name">{user?.nombre || user?.name || user?.email}</span>
           </span>
           <button onClick={onLogout} className="btn btn-danger btn-small">
-            🚪 Salir
+            Salir
           </button>
         </div>
       </div>

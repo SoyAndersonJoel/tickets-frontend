@@ -7,7 +7,7 @@ const empty = {
 };
 
 export default function Clientes() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState(null);
@@ -17,7 +17,11 @@ export default function Clientes() {
     setLoading(true);
     try { setItems(await clientesApi.list()); } finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+    load();
+  }, [authLoading, user]);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

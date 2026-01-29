@@ -5,7 +5,7 @@ import { ticketsApi, clientesApi, tecnicosApi } from '../services/api';
 const empty = { codigo: '', descripcion: '', id_tecnico: '', id_cliente: '' };
 
 export default function Tickets() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(empty);
   const [editingId, setEditingId] = useState(null);
@@ -26,7 +26,11 @@ export default function Tickets() {
       setTecnicos(tec);
     } finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+    load();
+  }, [authLoading, user]);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const onSubmit = async (e) => {

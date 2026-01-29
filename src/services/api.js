@@ -12,6 +12,17 @@ export const authApi = {
   }
 };
 
+// Register and logout
+authApi.register = async (email, password) => {
+  await delay();
+  return authService.register(email, password);
+};
+
+authApi.logout = async () => {
+  await delay();
+  return authService.logout();
+};
+
 export const tecnicosApi = {
   list: async () => {
     await delay();

@@ -1,6 +1,7 @@
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
@@ -12,15 +13,18 @@ export const authService = {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      return {
-        token: await user.getIdToken(),
-        user: {
-          id: user.uid,
-          email: user.email,
-          nombre: user.displayName || 'Usuario'
-        }
-      };
+
+      // Impedir login si el correo no está verificado
+      if (!user.emailVerified) {
+        // Cerrar sesión inmediata para no mantener sesión de usuario no verificado
+        try { await signOut(auth); } catch (e) { /* ignorar */ }
+        const err = new Error('Email no verificado. Revisa tu bandeja y confirma tu correo.');
+        err.code = 'auth/email-not-verified';
+        throw err;
+      }
+
+      // Devuelve el objeto User de Firebase
+      return user;
     } catch (error) {
       console.error('Error logging in:', error);
       throw new Error('Credenciales incorrectas');
@@ -31,7 +35,20 @@ export const authService = {
   register: async (email, password) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      const user = userCredential.user;
+      // Intentar enviar email de verificación y devolver resultado
+      try {
+        // Opcional: actionCodeSettings para controlar la URL de retorno
+        const actionCodeSettings = {
+          url: window.location.origin + '/login',
+          handleCodeInApp: false
+        };
+        await sendEmailVerification(user, actionCodeSettings);
+        return { user, emailSent: true };
+      } catch (emailErr) {
+        console.error('Error sending verification email:', emailErr);
+        return { user, emailSent: false, emailError: emailErr.message || String(emailErr) };
+      }
     } catch (error) {
       console.error('Error registering:', error);
       throw error;
@@ -51,5 +68,23 @@ export const authService = {
   // Escuchar cambios de autenticación
   onAuthChange: (callback) => {
     return onAuthStateChanged(auth, callback);
+  }
+};
+
+// Reenviar correo de verificación: inicia sesión temporalmente, envía verificación y cierra sesión
+export const resendVerification = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    const actionCodeSettings = {
+      url: window.location.origin + '/login',
+      handleCodeInApp: false
+    };
+    await sendEmailVerification(user, actionCodeSettings);
+    await signOut(auth);
+    return { success: true };
+  } catch (error) {
+    console.error('Error resending verification:', error);
+    return { success: false, error: error.message || String(error) };
   }
 };
